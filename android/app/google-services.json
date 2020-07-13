@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "11494952636",
+    "firebase_url": "https://mini-ads-ad12f.firebaseio.com",
+    "project_id": "mini-ads-ad12f",
+    "storage_bucket": "mini-ads-ad12f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:11494952636:android:cac227dae7a5b7f2ee8ab9",
+        "android_client_info": {
+          "package_name": "com.nagham.mini_ads"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "11494952636-mru3j1o7um3kcgogouttio8ibkkhnoii.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDg6i_vhzsi_dO1P8H4zzQ4TFb8hiNMwEk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "11494952636-mru3j1o7um3kcgogouttio8ibkkhnoii.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
