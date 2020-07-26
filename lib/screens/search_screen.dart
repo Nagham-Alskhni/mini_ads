@@ -1,18 +1,22 @@
+import 'dart:async';
 import 'dart:ui';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mini_ads/models/Current-User.dart';
 import 'package:mini_ads/provider/search_screen_provider.dart';
 import 'package:mini_ads/provider/user_provider.dart';
+import 'package:mini_ads/widget/category-card.dart';
 import 'package:mini_ads/widget/category_icon_widget.dart';
-import 'package:mini_ads/widget/my_gradient_button.dart';
 import 'package:provider/provider.dart';
 import 'package:mini_ads/widget/ItemCard.dart';
 import 'package:mini_ads/widget/MyDrawer.dart';
 import 'package:mini_ads/widget/Grid_View.dart';
 import 'package:mini_ads/screens/creat_item.dart';
-import 'package:mini_ads/screens/setting_screen.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:mini_ads/widget/Category-Body.dart';
+import 'package:mini_ads/models/item.dart';
+import 'package:geolocator/geolocator.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -20,9 +24,39 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  Position _position;
+  StreamSubscription<Position> _positionStream;
   @override
+  void initState() {
+    super.initState();
+    var locationOption =
+        LocationOptions(accuracy: LocationAccuracy.low, distanceFilter: 16);
+    //TODO get user location only once instead of a stream
+
+    _positionStream = Geolocator()
+        .getPositionStream(locationOption)
+        .listen((Position position) {
+      print(position == null
+          ? 'Unknown'
+          : position.latitude.toString() +
+              ', ' +
+              position.longitude.toString());
+
+      setState(() {
+        print(position);
+        _position = position; //user location is save in variable _position
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _positionStream.cancel();
+  }
+
   Widget build(BuildContext context) {
-    final user = Provider.of<UserProvider>(context);
+    final user = Provider.of<CurrentUserProvider>(context);
 
     return ChangeNotifierProvider(
       create: (context) => SearchScreenProvider(),
@@ -61,7 +95,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   // Add your onPressed code here!
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => CreatItem()),
+
+                    // we need to send the user position when creating new item
+                    // because we need the item to have a location
+                    MaterialPageRoute(
+                        builder: (context) => CreatItem(
+                              longitude: _position.longitude,
+                              latitude: _position.latitude,
+                            )),
                   );
                 },
                 child: Icon(Icons.add),
@@ -74,7 +115,15 @@ class _SearchScreenState extends State<SearchScreen> {
                   children: <Widget>[
                     CategoryIcons(),
                     SizedBox(height: 20),
-                    GridViewWidget(),
+
+                    //GridViewWidget streams items from Firestore
+                    // in order to show the user the items that are only around them
+                    // we first need to pass the user's longitude and latitude to GridViewWidget
+                    GridViewWidget(
+                      longitude: _position.longitude,
+                      latitude: _position.latitude,
+                    ),
+                    //CategoryCard(),
 
 //                    MyGradientButton(
 //                      child: Text('My Button'),

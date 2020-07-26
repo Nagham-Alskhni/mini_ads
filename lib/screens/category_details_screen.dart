@@ -2,15 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:mini_ads/models/category.dart';
 
 class CategoryDetailsScreen extends StatelessWidget {
-
   final Category category;
-  CategoryDetailsScreen({this.category,});
+  CategoryDetailsScreen({
+    this.category,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(category.name),
+        title: Text('Mini ads'),
       ),
       body: ListView.separated(
         itemCount: category.children.length,

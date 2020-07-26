@@ -8,10 +8,12 @@ class CategoryIcons extends StatefulWidget {
 }
 
 class _CategoryIconsState extends State<CategoryIcons> {
+  int selectedIndex = 0;
+//  final Function(Category) onCategoryChanged;
+
   @override
   Widget build(BuildContext context) {
     final categoriesList = SearchScreenProvider().categories;
-    int selectedIndex = 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mini_ads/screens/category_details_screen.dart';
+import 'package:mini_ads/screens/search_screen.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -24,6 +26,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         verificationCompleted: (AuthCredential credential) async {
           Navigator.of(context).pop();
           AuthResult result = await _auth.signInWithCredential(credential);
+          //TODO put naviagation here to. here is when the sms code gets confirmed automatically
+          //navigate to second screen after succesful login
+          if (result.user != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SearchScreen(),
+              ),
+            );
+          }
 //          }
         },
         verificationFailed: (AuthException exception) {
@@ -61,7 +73,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CategoryDetailsScreen(),
+                              builder: (context) => SearchScreen(),
                             ),
                           );
                         }
@@ -87,24 +99,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             children: <Widget>[
               SizedBox(
                 height: 80,
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.supervised_user_circle),
-                    labelText: 'Name ',
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue),
-                    ),
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      name = value;
-                    });
-                  },
-                ),
               ),
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
@@ -150,6 +144,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       showSpinner = true;
                       final phone = _phoneController.text.trim();
                       loginUser(phone, context);
+//                        Navigator.push(
+//                            context,
+//                            MaterialPageRoute(
+//                                builder: (context) => SearchScreen()));
                     });
 /*                try {
 

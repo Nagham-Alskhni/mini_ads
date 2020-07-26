@@ -1,8 +1,13 @@
 import 'dart:io';
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mini_ads/models/Current-User.dart';
+import 'package:path/path.dart';
+import 'package:provider/provider.dart';
 
 class UserProfile extends StatefulWidget {
   @override
@@ -14,6 +19,8 @@ class _UserProfileState extends State<UserProfile> {
   String name;
   String adress;
   File _image;
+  bool _uploadingImage = false;
+
   final picker = ImagePicker();
 
   Future getImage() async {
@@ -25,8 +32,23 @@ class _UserProfileState extends State<UserProfile> {
     });
   }
 
+  Future uploadPic(BuildContext context) async {
+    String fileName = basename(_image.path);
+    StorageReference firebaseStorageRef =
+        FirebaseStorage.instance.ref().child(fileName);
+    StorageUploadTask uploadTask = firebaseStorageRef.putFile(_image);
+    StorageTaskSnapshot taskSnapshot = await uploadTask.onComplete;
+//    what is the below code ??
+    final profilePhotoUrl = await taskSnapshot.ref.getDownloadURL();
+
+    return profilePhotoUrl;
+  }
+
   @override
   Widget build(BuildContext context) {
+//    what for this line ??
+    String newPhotoUrl;
+
     return Scaffold(
       backgroundColor: Colors.cyan,
       appBar: AppBar(
@@ -34,7 +56,9 @@ class _UserProfileState extends State<UserProfile> {
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: null,
+          onPressed: () {
+            Navigator.pop(context);
+          },
         ),
         actions: <Widget>[
           Padding(
@@ -66,7 +90,10 @@ class _UserProfileState extends State<UserProfile> {
                       child: CircleAvatar(
                         backgroundImage: _image == null
                             ? NetworkImage(
-                                'https://thumbs.dreamstime.com/b/user-account-flat-icon-round-simple-button-circular-vector-sign-style-design-95310595.jpg')
+                                Provider.of<CurrentUserProvider>(context)
+                                        .user
+                                        .profilePhotoUrl ??
+                                    '')
                             : FileImage(
                                 File(_image.path),
                               ),
@@ -94,9 +121,11 @@ class _UserProfileState extends State<UserProfile> {
               width: 350,
               height: 50,
               child: TextField(
+                controller: TextEditingController(
+                    text: Provider.of<CurrentUserProvider>(context).user.name),
                 decoration: InputDecoration(
                   prefixIcon: Icon(
-                    Icons.phone,
+                    Icons.person,
                     color: Colors.white,
                   ),
                   labelText: 'Name',
@@ -163,6 +192,40 @@ class _UserProfileState extends State<UserProfile> {
                 },
               ),
             ),
+            RaisedButton(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18.0),
+                  side: BorderSide(color: Colors.blue)),
+              child: Text('SAVE'),
+              onPressed: () async {
+//                Provider.of<CurrentUserProvider>(context, listen: false)
+//                    .user.name = name;
+
+                //Write user name in firestore document /user/uid
+                await Firestore.instance
+                    .collection('users')
+                    .document(
+                        Provider.of<CurrentUserProvider>(context, listen: false)
+                            .user
+                            .id)
+                    .setData({
+                  'name': name,
+                }, merge: true);
+                newPhotoUrl = await uploadPic(context);
+
+                await Firestore.instance
+                    .collection('users')
+                    .document(
+                        Provider.of<CurrentUserProvider>(context, listen: false)
+                            .user
+                            .id)
+                    .setData({
+                  'profilePhotoUrl': newPhotoUrl,
+                }, merge: true);
+
+//                changeUserPhoto(newPhotoUrl);
+              },
+            )
           ],
         ),
       ),

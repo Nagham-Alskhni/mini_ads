@@ -1,14 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:mini_ads/models/category.dart';
 import 'package:mini_ads/provider/search_screen_provider.dart';
 import 'package:multi_image_picker/multi_image_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mini_ads/models/item.dart';
 
 class CreatItem extends StatefulWidget {
+  final num longitude;
+  final num latitude;
+  CreatItem({this.longitude, this.latitude});
   @override
   _CreatItemState createState() => _CreatItemState();
 }
 
 class _CreatItemState extends State<CreatItem> {
+  Item item;
+  String description;
+  String title;
+  String price;
+  String type = "Donate";
+  String mainPhotoUrl;
+//  String images;
+  String cityName;
+  String category;
+  bool isFavorite;
+  String id;
+
   List<bool> _selection = List.generate(3, (_) => false);
   final GlobalKey<FormState> _formKey = new GlobalKey<FormState>();
 
@@ -65,6 +83,7 @@ class _CreatItemState extends State<CreatItem> {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.start,
@@ -130,7 +149,7 @@ class _CreatItemState extends State<CreatItem> {
                           children: <Widget>[
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Text('Exchange'),
+                              child: Text('Donate'),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
@@ -138,12 +157,36 @@ class _CreatItemState extends State<CreatItem> {
                             ),
                             Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Text('Exchange'),
+                              child: Text('Sell'),
                             ),
                           ],
                           onPressed: (int index) {
+                            //set the value of variable type according to index
+                            type = [
+                              'Donate',
+                              'Exchange',
+                              'Sell'
+                            ][index]; //It will choose the item from the list according to index
+
+                            //another way to do that
+                            if (index == 0)
+                              type = "Donate";
+                            else if (index == 1)
+                              type = "Exchange";
+                            else if (index == 2) type = "Sell";
+
+                            //set all _selection values to false
+                            for (int i = 0; i < _selection.length; i++) {
+                              if (i == index)
+                                _selection[i] =
+                                    true; //set the item user clicked on to true
+                              else
+                                _selection[index] =
+                                    false; //set other items to false
+                            }
+
                             setState(() {
-                              _selection[index] = !_selection[index];
+                              //_selection[index] = !_selection[index];
                             });
                           },
                           isSelected: _selection,
@@ -158,13 +201,19 @@ class _CreatItemState extends State<CreatItem> {
                             hintText: 'Item Name',
                             labelText: 'Title',
                           ),
+                          onChanged: (value) {
+                            title = value;
+                          },
                         ),
                         new TextFormField(
                           decoration: const InputDecoration(
                             icon: const Icon(Icons.description),
-                            hintText: 'Enter a Descreption ',
-                            labelText: 'Descreption',
+                            hintText: 'Enter a Description ',
+                            labelText: 'Description',
                           ),
+                          onChanged: (value) {
+                            description = value;
+                          },
                         ),
                         new TextFormField(
                           decoration: const InputDecoration(
@@ -172,6 +221,9 @@ class _CreatItemState extends State<CreatItem> {
                             hintText: 'Enter a Price ',
                             labelText: 'Price ',
                           ),
+                          onChanged: (value) {
+                            price = value;
+                          },
                         ),
                         new FormField(
                           builder: (FormFieldState state) {
@@ -205,12 +257,36 @@ class _CreatItemState extends State<CreatItem> {
                           },
                         ),
                         Container(
-                            padding:
-                                const EdgeInsets.only(left: 40.0, top: 20.0),
-                            child: new RaisedButton(
-                              child: const Text('Add'),
-                              onPressed: null,
-                            )),
+                          padding: const EdgeInsets.only(left: 40.0, top: 20.0),
+                          child: new RaisedButton(
+                            child: const Text('Add'),
+                            onPressed: () async {
+                              // Initialize GeoFlutterFire
+                              Geoflutterfire geo = Geoflutterfire();
+
+                              // Now we will save the item in Firestore
+                              // first we will create the item location object from the longitude and latitude values
+                              // that we got from the search screen
+                              GeoFirePoint myLocation = geo.point(
+                                  latitude: widget.latitude,
+                                  longitude: widget.longitude);
+
+                              await Firestore.instance.collection('Items').add({
+                                'title': title,
+                                'price': price,
+                                'description': description,
+                                'type': type,
+                                'category': _selectedCategory,
+                                'cityName': cityName,
+                                'mainPhotoUrl': mainPhotoUrl,
+                                // save item location
+                                'location': myLocation.data
+                                //'id': id //You do not need id inside the document
+                                //Everything looks fine
+                              });
+                            },
+                          ),
+                        ),
                       ],
                     ),
                   ),

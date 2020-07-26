@@ -1,4 +1,10 @@
+// THIS WIDGET CAN BE DELETED
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mini_ads/models/item.dart';
+import 'package:mini_ads/widget/Category-Body.dart';
+import 'package:mini_ads/screens/search_screen.dart';
 
 class CategoryCard extends StatefulWidget {
   @override
@@ -6,44 +12,45 @@ class CategoryCard extends StatefulWidget {
 }
 
 class _CategoryCardState extends State<CategoryCard> {
+  List<Widget> makeListView(AsyncSnapshot snapshot) {
+    return snapshot.data.documents.map<Widget>((DocumentSnapshot document) {
+      print('found item id: ${document.documentID}');
+      return Category_Body(
+        item: Item(
+            id: document.documentID,
+            title: document['title'],
+            description: document['description'],
+            images: document['images'],
+            mainPhotoUrl: document['mainphotoUrl'],
+            price: document['price'],
+            isFavorite: document['isFavorite'],
+            type: document['type']),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Expanded(
-          child: Container(
-            padding: EdgeInsets.all(8),
-//            height: 180,
-//            width: 160,
-            decoration: BoxDecoration(
-              color: Color(0xff3776A6),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Image.network(
-              'https://en.louisvuitton.com/images/is/image/lv/1/PP_VP_L/louis-vuitton--M53151_PM2_Front%20view.jpg',
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 8 / 4,
-          ),
-          child: Text(
-            'product name',
-            style: TextStyle(color: Colors.grey),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            vertical: 5,
-          ),
-          child: Text(
-            'product price',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ],
-    );
+    return StreamBuilder<QuerySnapshot>(
+        stream: Firestore.instance.collection('Items').snapshots(),
+        builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+          if (snapshot.hasError) return Text('error');
+          if (snapshot.hasData) {
+            print('there is data');
+            //You need to put it here
+
+          }
+          if (!snapshot.hasData) return Text('no Data');
+
+          switch (snapshot.connectionState) {
+            case ConnectionState.waiting:
+              return Text('loading');
+            default:
+              if (snapshot.hasData)
+                return Column(children: makeListView(snapshot));
+              else
+                return Text("No Data");
+          }
+        });
   }
 }
